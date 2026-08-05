@@ -10,7 +10,7 @@ __pycache__/
 
 # tfx components
 /pipelines
-/serving_model
+#/serving_model
 
 # Distribution / packaging
 .Python

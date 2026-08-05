@@ -8,13 +8,18 @@ app = FastAPI()
 def get_latest_model_path():
     # Otomatis melacak folder model apa pun yang ada di dalam serving_model/
     # Tanpa peduli angka timestamp-nya berubah-ubah
-    search_path = "./serving_model/*/saved_model.pb"
-    matches = glob.glob(search_path)
+    search_paths = [
+        "./output/serving_model/*/saved_model.pb",
+        "output/serving_model/*/saved_model.pb",
+        "./output/customer-churn-pipeline/serving_model/*/saved_model.pb",
+        "output/customer-churn-pipeline/serving_model/*/saved_model.pb"
+    ]
     
-    if matches:
-        # Ambil folder dengan waktu modifikasi paling akhir (terbaru)
-        latest_model = max(matches, key=os.path.getmtime)
-        return os.path.dirname(latest_model)
+    for pattern in search_paths:
+        matches = glob.glob(pattern)
+        if matches:
+            latest_model = max(matches, key=os.path.getmtime)
+            return os.path.dirname(latest_model)
     return None
 
 @app.get("/")
