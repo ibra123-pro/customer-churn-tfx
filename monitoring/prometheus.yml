@@ -10,4 +10,4 @@ scrape_configs:
     scrape_interval: 5s 
     metrics_path: /monitoring/prometheus/metrics 
     static_configs:
-      - targets: ['selfless-recreation.railway.internal:8501'] 
+      - targets: ['telco-customer-churn-production.up.railway.app:8501'] 
