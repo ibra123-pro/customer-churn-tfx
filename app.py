@@ -9,10 +9,10 @@ def get_latest_model_path():
     # Otomatis melacak folder model apa pun yang ada di dalam serving_model/
     # Tanpa peduli angka timestamp-nya berubah-ubah
     search_paths = [
+        "./serving_model/*/saved_model.pb",
+        "serving_model/*/saved_model.pb",
         "./output/serving_model/*/saved_model.pb",
-        "output/serving_model/*/saved_model.pb",
-        "./output/customer-churn-pipeline/serving_model/*/saved_model.pb",
-        "output/customer-churn-pipeline/serving_model/*/saved_model.pb"
+        "output/serving_model/*/saved_model.pb"
     ]
     
     for pattern in search_paths:
