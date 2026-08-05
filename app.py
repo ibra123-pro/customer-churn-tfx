@@ -61,23 +61,31 @@ def get_model_metadata(model_name: str):
     
     try:
         saved_model_loaded = tf.saved_model.load(model_path)
-        signatures = saved_model_loaded.signatures
         
+        # Cek apakah model memiliki signatures
         sig_defs = {}
-        for sig_key, sig_value in signatures.items():
-            inputs_meta = {}
-            for input_name, tensor_spec in sig_value.structured_input_signature[1].items():
-                inputs_meta[input_name] = {
-                    "dtype": str(tensor_spec.dtype.name).upper(),
-                    "tensor_shape": {
-                        "dim": [{"size": str(dim)} for dim in tensor_spec.shape.as_list()] if tensor_spec.shape.as_list() else [{"size": "-1"}]
-                    }
+        if hasattr(saved_model_loaded, "signatures") and saved_model_loaded.signatures:
+            signatures = saved_model_loaded.signatures
+            for sig_key, sig_value in signatures.items():
+                inputs_meta = {}
+                try:
+                    for input_name, tensor_spec in sig_value.structured_input_signature[1].items():
+                        inputs_meta[input_name] = {
+                            "dtype": str(tensor_spec.dtype.name).upper(),
+                            "tensor_shape": {
+                                "dim": [{"size": str(dim)} for dim in tensor_spec.shape.as_list()] if tensor_spec.shape.as_list() else [{"size": "-1"}]
+                            }
+                        }
+                except Exception:
+                    pass # Lewati jika struktur input privat gagal dibaca
+                
+                sig_defs[sig_key] = {
+                    "inputs": inputs_meta,
+                    "name": sig_key
                 }
-            
-            sig_defs[sig_key] = {
-                "inputs": inputs_meta,
-                "name": sig_key
-            }
+        else:
+            # Fallback jika default serving signature digunakan
+            sig_defs["serving_default"] = {"inputs": {}, "name": "serving_default"}
 
         return {
             "model_spec": {
