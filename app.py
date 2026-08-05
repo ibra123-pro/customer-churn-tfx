@@ -21,6 +21,30 @@ def get_latest_model_path():
 def read_root():
     return {"message": "Telco Customer Churn API is running!"}
 
+@app.get("/debug-model-search")
+def debug_model_search():
+    import glob
+    import os
+    
+    # Cek berbagai kemungkinan lokasi folder serving_model
+    patterns = [
+        "./serving_model/*/saved_model.pb",
+        "serving_model/*/saved_model.pb",
+        "./output/serving_model/*/saved_model.pb",
+        "output/serving_model/*/saved_model.pb",
+        "**/saved_model.pb"
+    ]
+    
+    found_matches = {}
+    for p in patterns:
+        found_matches[p] = glob.glob(p, recursive=True)
+        
+    return {
+        "current_dir": os.getcwd(),
+        "root_contents": os.listdir("."),
+        "glob_results": found_matches
+    }
+
 @app.get("/v1/models/{model_name}/metadata")
 def get_model_metadata(model_name: str):
     model_path = get_latest_model_path()
