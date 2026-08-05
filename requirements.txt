@@ -1,1 +1,5 @@
-tfx == 1.7.0
+fastapi
+uvicorn
+tensorflow
+pandas
+numpy
