@@ -23,6 +23,16 @@ def get_latest_model_path():
 def read_root():
     return {"message": "Telco Customer Churn API is running!"}
 
+@app.get("/debug-dir")
+def debug_dir():
+    import os
+    return {
+        "current_directory": os.getcwd(),
+        "root_contents": os.listdir("."),
+        "output_exists": os.path.exists("output"),
+        "output_contents": os.listdir("output") if os.path.exists("output") else []
+    }
+
 # Endpoint metadata yang disamakan formatnya dengan standar TensorFlow Serving / mentor
 @app.get("/v1/models/{model_name}/metadata")
 def get_model_metadata(model_name: str):
