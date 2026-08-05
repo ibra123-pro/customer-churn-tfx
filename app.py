@@ -60,8 +60,32 @@ def get_model_metadata(model_name: str):
     version_str = os.path.basename(model_path)
     
     try:
-        # Cukup pastikan model dapat diload atau foldernya valid
-        # Tanpa perlu mengekstrak structured_input_signature yang sering bentrok versi TF
+        saved_model_loaded = tf.saved_model.load(model_path)
+        sig_defs = {}
+        
+        if hasattr(saved_model_loaded, "signatures") and saved_model_loaded.signatures:
+            signatures = saved_model_loaded.signatures
+            for sig_key, sig_value in signatures.items():
+                inputs_meta = {}
+                try:
+                    # Mengekstrak input tensor asli secara dinamis seperti milik mentor
+                    for input_name, tensor_spec in sig_value.structured_input_signature[1].items():
+                        dims = [{"size": str(dim), "name": ""} for dim in tensor_spec.shape.as_list()] if tensor_spec.shape.as_list() else [{"size": "-1", "name": ""}]
+                        inputs_meta[input_name] = {
+                            "dtype": str(tensor_spec.dtype.name).upper(),
+                            "tensor_shape": {"dim": dims},
+                            "unknown_rank": False
+                        }
+                except Exception:
+                    pass
+                
+                sig_defs[sig_key] = {
+                    "inputs": inputs_meta,
+                    "name": f"{sig_key}_inputs"
+                }
+        else:
+            sig_defs["serving_default"] = {"inputs": {}, "name": "serving_default"}
+
         return {
             "model_spec": {
                 "name": model_name,
@@ -70,12 +94,7 @@ def get_model_metadata(model_name: str):
             },
             "metadata": {
                 "signature_def": {
-                    "signature_def": {
-                        "serving_default": {
-                            "inputs": {},
-                            "name": "serving_default"
-                        }
-                    }
+                    "signature_def": sig_defs
                 }
             }
         }
