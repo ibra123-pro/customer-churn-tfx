@@ -18,10 +18,19 @@ if os.path.exists(MODEL_DIR):
 def read_root():
     return {"message": "Telco Customer Churn API is running!"}
 
-@app.post("/predict")
-def predict(data: dict):
-    if model is None:
-        return {"error": "Model not found or loaded yet."}
-
-    # Tambahkan logika pengolahan data dan prediksi di sini sesuai format input modelmu
-    return {"status": "success", "message": "Endpoint siap menerima data prediksi"}
+@app.get("/check-files")
+def check_files():
+    # 1. Cek apakah folder serving_model ada
+    folder_exists = os.path.exists(MODEL_DIR)
+    
+    # 2. Cek daftar file di dalam folder proyek utama
+    root_files = os.listdir(".")
+    
+    # 3. Cek daftar file di dalam folder serving_model (jika ada)
+    model_files = os.listdir(MODEL_DIR) if folder_exists else []
+    
+    return {
+        "folder_serving_model_exists": folder_exists,
+        "root_directory_contents": root_files,
+        "serving_model_contents": model_files
+    }
