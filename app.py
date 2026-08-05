@@ -1,36 +1,49 @@
+import os
+import glob
 from fastapi import FastAPI
 import tensorflow as tf
-import numpy as np
-import os
 
 app = FastAPI()
 
-# Menentukan path ke saved_model.pb hasil TFX pipeline
-# Sesuaikan direktori penyimpanannya jika berbeda
-MODEL_DIR = "./serving_model" 
-
-model = None
-if os.path.exists(MODEL_DIR):
-    # Memuat model Keras/TensorFlow dari direktori TFX
-    model = tf.keras.models.load_model(MODEL_DIR)
+# Fungsi helper untuk mencari path model secara dinamis
+def get_latest_model_path():
+    # Mencari pola folder di dalam output/serving_model/
+    # Contoh: output/serving_model/*/saved_model.pb atau ./serving_model/*/saved_model.pb
+    search_paths = [
+        "./output/serving_model/*/saved_model.pb",
+        "output/serving_model/*/saved_model.pb",
+        "./serving_model/*/saved_model.pb"
+    ]
+    
+    for pattern in search_paths:
+        matches = glob.glob(pattern)
+        if matches:
+            # Ambil folder yang paling baru/sesuai
+            latest_model = max(matches, key=os.path.getmtime)
+            # Kembalikan direktori foldernya (bukan file .pb nya)
+            return os.path.dirname(latest_model)
+    return None
 
 @app.get("/")
 def read_root():
     return {"message": "Telco Customer Churn API is running!"}
 
+# Endpoint revisi untuk mengecek file dan isi direktori model secara otomatis
 @app.get("/check-files")
 def check_files():
-    # 1. Cek apakah folder serving_model ada
-    folder_exists = os.path.exists(MODEL_DIR)
-    
-    # 2. Cek daftar file di dalam folder proyek utama
+    # 1. Cek daftar file di direktori utama
     root_files = os.listdir(".")
     
-    # 3. Cek daftar file di dalam folder serving_model (jika ada)
-    model_files = os.listdir(MODEL_DIR) if folder_exists else []
+    # 2. Cari path model otomatis
+    model_path = get_latest_model_path()
+    model_exists = model_path is not None and os.path.exists(model_path)
+    
+    # 3. Cek isi file di dalam folder model jika ketemu
+    model_contents = os.listdir(model_path) if model_exists else []
     
     return {
-        "folder_serving_model_exists": folder_exists,
         "root_directory_contents": root_files,
-        "serving_model_contents": model_files
+        "detected_model_path": model_path,
+        "model_folder_exists": model_exists,
+        "model_folder_contents": model_contents
     }
